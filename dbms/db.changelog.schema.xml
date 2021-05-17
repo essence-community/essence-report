@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+  <property name="user.update" value="s_up"/>
+  <property name="user.table" value="s_ut"/>
+  <property name="user.connect" value="s_uc"/>
+  <property name="user.admin" value="s_su"/>
+
+  <include file="s_su/init.sql" relativeToChangelogFile="true" />
+  <include file="public/public.xml" relativeToChangelogFile="true" />
+  <include file="table/table.xml" relativeToChangelogFile="true" />
+  <include file="package/package.xml" relativeToChangelogFile="true" />
+  <include file="s_su/grants.sql" relativeToChangelogFile="true" />
+</databaseChangeLog>

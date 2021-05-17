@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd $DIR
+PATHLIQUIBASE=liquibase
+
+if [ -f "liquibase/liquibase" ]; then 
+    PATHLIQUIBASE=liquibase/liquibase
+fi
+if [ -f "../dbms/liquibase/liquibase" ]; then 
+    PATHLIQUIBASE=../dbms/liquibase/liquibase
+fi
+$PATHLIQUIBASE --defaultsFile=liquibase.schema.properties --changeLogFile=db.changelog.schema.xml update 1>> main.log 2>&1
+$PATHLIQUIBASE --defaultsFile=liquibase.meta.properties --changeLogFile=db.changelog.meta.xml update 1>> main.log 2>&1

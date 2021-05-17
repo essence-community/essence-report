@@ -1,0 +1,18 @@
+{
+  "name": "@essence-report-format/JsReportXlsx",
+  "version": "1.0.0",
+  "description": "Format Report",
+  "main": "index.js",
+  "author": "Ivan Artemov (honyrik@gmail.com)",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@essence-report/plugininf": "^1.0.0",
+    "jsreport-core": "^2.10.1",
+    "jsreport-xlsx": "^2.5.0"
+  },
+  "devDependencies": {
+    "@types/jsreport-core": "^2.0.0",
+    "@types/jsreport-xlsx": "^1.4.2"
+  }
+}

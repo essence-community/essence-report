@@ -1,0 +1,11 @@
+{
+    "extends": "@essence-community/eslint-config-react",
+    "rules": {
+        "no-undef-init": "off",
+        "object-curly-spacing": "off",
+        "sort-keys": "off",
+        "compat/compat": "off",
+        "ban-ts-comment": "off",
+        "@typescript-eslint/ban-ts-comment": "off"
+    }
+}

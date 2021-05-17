@@ -1,0 +1,5 @@
+connectString = "postgres://localhost:9021/essence_report"
+poolMin = 5
+poolMax = 100
+user = "s_uc"
+password = "s_uc"

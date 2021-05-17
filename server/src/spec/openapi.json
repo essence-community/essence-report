@@ -1,0 +1,354 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "ESSENCE_REPORT",
+        "description": "Essence report Server",
+        "contact": {
+            "email": "i.artemov@abr-region.ru"
+        },
+        "license": {
+            "name": "MIT"
+        },
+        "version": "1.0.0"
+    },
+    "tags": [
+        {
+            "name": "execute",
+            "description": "Process print report"
+        },
+        {
+            "name": "store",
+            "description": "Reports store"
+        },
+        {
+            "name": "runner",
+            "description": "Run report print"
+        }
+    ],
+    "paths": {
+        "/execute": {
+            "get": {
+                "tags": ["execute"],
+                "description": "Status report in queue",
+                "operationId": "executeGET",
+                "parameters": [
+                    {
+                        "name": "ck_queue",
+                        "in": "query",
+                        "required": true,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "ID queue",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "session",
+                        "in": "query",
+                        "required": false,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status report",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/ResultSuccess"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ResultFault"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-swagger-router-controller": "Execute"
+            },
+            "post": {
+                "tags": ["execute"],
+                "description": "Add report in queue",
+                "operationId": "executePOST",
+                "requestBody": {
+                    "description": "Parameter report",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Execute"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Add in queue",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/ResultSuccess"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ResultFault"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-swagger-router-controller": "Execute"
+            },
+            "delete": {
+                "tags": ["execute"],
+                "description": "Delete report in queue",
+                "operationId": "executeDELETE",
+                "parameters": [
+                    {
+                        "name": "ck_queue",
+                        "in": "query",
+                        "required": true,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "ID queue",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "session",
+                        "in": "query",
+                        "required": false,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Delete report",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/ResultSuccess"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ResultFault"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-swagger-router-controller": "Execute"
+            }
+        },
+        "/runner": {
+            "get": {
+                "tags": ["runner"],
+                "description": "Run report build",
+                "operationId": "runnerGET",
+                "parameters": [
+                    {
+                        "name": "ck_queue",
+                        "in": "query",
+                        "required": true,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "ID queue",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status report",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/ResultSuccess"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ResultFault"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-swagger-router-controller": "Runner"
+            }
+        },
+        "/store": {
+            "get": {
+                "tags": ["store"],
+                "description": "Get file",
+                "operationId": "storeGET",
+                "parameters": [
+                    {
+                        "name": "ck_queue",
+                        "in": "query",
+                        "required": true,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "ID queue",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "session",
+                        "in": "query",
+                        "required": false,
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Files",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/ResultSuccess"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ResultFault"
+                                        }
+                                    ]
+                                }
+                            },
+                            "*/*": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-swagger-router-controller": "Store"
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ResultSuccess": {
+                "type": "object",
+                "required": ["success", "ck_id", "cv_status"],
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "description": "Result",
+                        "enum": [true]
+                    },
+                    "ck_id": {
+                        "type": "string",
+                        "description": "ID queue",
+                        "format": "uuid"
+                    },
+                    "cv_status": {
+                        "type": "string",
+                        "description": "Status",
+                        "enum": [
+                            "add",
+                            "processing",
+                            "success",
+                            "fault",
+                            "delete"
+                        ]
+                    }
+                },
+                "example": {
+                    "success": true,
+                    "cv_status": "add",
+                    "ck_id": "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
+                }
+            },
+            "ResultFault": {
+                "type": "object",
+                "required": ["success", "ck_error", "cv_message"],
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "description": "Result",
+                        "enum": [true]
+                    },
+                    "ck_error": {
+                        "type": "string",
+                        "description": "ID queue",
+                        "format": "uuid"
+                    },
+                    "cv_message": {
+                        "type": "string",
+                        "description": "Message error"
+                    }
+                },
+                "example": {
+                    "success": false,
+                    "ck_error": "network",
+                    "cv_message": "Error: Connection refused"
+                }
+            },
+            "Execute": {
+                "required": ["cct_parameter", "ck_format", "ck_report"],
+                "type": "object",
+                "properties": {
+                    "ck_report": {
+                        "type": "string",
+                        "description": "ID report",
+                        "format": "uuid"
+                    },
+                    "ck_format": {
+                        "type": "string",
+                        "description": "Format report"
+                    },
+                    "cl_online": {
+                        "type": "boolean",
+                        "description": "Online print"
+                    },
+                    "cct_parameter": {
+                        "type": "object",
+                        "description": "Parameter report"
+                    },
+                    "cv_name": {
+                        "type": "string"
+                    },
+                    "session": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <include file="Page_A2B0C7858B5C4EA2BED997565225CBBF.sql" relativeToChangelogFile="true"/>
+    <include file="Page_4162F6109EEA47ABA51B80E5E0356341.sql" relativeToChangelogFile="true"/>
+    <include file="Page_6195DEA37F414F958496BC407521A972.sql" relativeToChangelogFile="true"/>
+    <include file="Page_9A95DA046B0944EBA002F0D5F29FB356.sql" relativeToChangelogFile="true"/>
+    <include file="Page_A90E68858FE14FF6B6EEEB08DE17AEA5.sql" relativeToChangelogFile="true"/>
+    <include file="Page_AF77B33341814224AA9A2FEE8CE39851.sql" relativeToChangelogFile="true"/>
+    <include file="Page_C448FA608A7A460284CC3CEDA439A8FB.sql" relativeToChangelogFile="true"/>
+    <include file="Page_CF77BA9C7F4041D08F547DE065590650.sql" relativeToChangelogFile="true"/>
+    <include file="Page_D787AE0C870C44D0B61C6FCEBB897743.sql" relativeToChangelogFile="true"/>
+</databaseChangeLog>

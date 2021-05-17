@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+function right_index {
+    str=$1
+    findStr=$2
+    len=${#str}
+    for ((i = 0; i > -len; i--)); do
+        f=${str:$i:1}
+        [[ "$f" == "$findStr" ]] && echo $i && break
+    done
+}
+
+if [ -f $DIR/liquibase.init.properties ]; then
+    cd $DIR
+    $DIR/../liquibase/liquibase --defaultsFile=$DIR/liquibase.init.properties --changeLogFile=db.changelog.init.xml update
+    if [ $? != 0 ]; then
+        echo "Error init errorcode $?"
+        exit 1
+    fi
+    exit 0
+fi
+
+read -p "Connection: " -i "jdbc:postgresql://127.0.0.1:5432/postgres" -e connectionPreBd
+if [ -z "$connectionPreBd" ]; then
+    echo "Error empty Connection"
+    exit 1
+fi
+read -p "Superadmin User: " -i "postgres" -e sUser
+if [ -z "$sUser" ]; then
+    echo "Error empty Superadmin User"
+    exit 1
+fi
+read -p "Superadmin Password: " -i "postgres" -e sPw
+if [ -z "$sPw" ]; then
+    echo "Error empty Superadmin Password"
+    exit 1
+fi
+read -p "Connection Meta: " -i "jdbc:postgresql://127.0.0.1:5432/core" -e connectionMetaBd
+if [ -z "$connectionMetaBd" ]; then
+    echo "Error empty Connection Meta"
+    exit 1
+fi
+read -p "Superadmin Meta User: " -i "s_su" -e sMetaUser
+if [ -z "$sMetaUser" ]; then
+    echo "Error empty Superadmin Meta User"
+    exit 1
+fi
+read -p "Superadmin Meta Password: " -i "s_su" -e sMetaPw
+if [ -z "$sMetaPw" ]; then
+    echo "Error empty Superadmin Meta Password"
+    exit 1
+fi
+
+read -p "Name DataBase: " -i "todo" -e newDataBase
+
+if [ -z "$newDataBase" ]; then
+    echo "Error empty DataBase"
+    exit 1
+fi
+
+l=$(right_index $connectionPreBd  "/")
+len=$((${#connectionPreBd}+$l+1))
+connectionBd="${connectionPreBd:0:$len}$newDataBase"
+
+read -p "Prefix Schema: " -i "todo_" -e newSchema
+
+if [ -z "$newSchema" ]; then
+    echo "Error empty prefix Schema"
+    exit 1
+fi
+
+function replaceFn {
+    rem1="s/#user.update#/${newSchema}p/gi"
+    rem2="s/#user.table#/${newSchema}t/gi"
+    rem3="s/#user.connect#/${newSchema}c/gi"
+    rem4="s/#name.db#/$newDataBase/gi"
+    rem5="s/#user.admin#/$sUser/gi"
+    rem6="s+#schemaConnection#+$connectionBd+gi"
+    rem7="s/#schemaConnectionAdmin#/$sUser/gi"
+    rem8="s/#schemaConnectionAdminPw#/$sPw/gi"
+    rem9="s+#metaConnection#+$connectionMetaBd+gi"
+    rem10="s/#metaConnectionAdmin#/$sMetaUser/gi"
+    rem11="s/#metaConnectionAdminPw#/$sMetaPw/gi"
+    sed -i -e "$rem1" -e "$rem2" -e "$rem3" -e "$rem4" -e "$rem5" -e "$rem6" -e "$rem7" -e "$rem8" -e "$rem9" -e "$rem10" -e "$rem11" "$1"
+}
+
+replaceFn "$DIR/db.sql"
+replaceFn "$DIR/db.changelog.init.xml"
+
+commadLiquibase="$DIR/../liquibase/liquibase --username=$sPw --password=$sUser --url=$connectionPreBd --driver=org.postgresql.Driver --changeLogFile=db.changelog.init.xml update"
+cd $DIR
+$commadLiquibase
+if [ $? != 0 ]; then
+    echo "Error init $newDataBase errorcode $?"
+    exit 1
+fi
+
+replaceFn "$DIR/../db.changelog.meta.xml"
+replaceFn "$DIR/../db.changelog.schema.xml"
+replaceFn "$DIR/../liquibase.meta.properties"
+replaceFn "$DIR/../liquibase.schema.properties"
+echo "driver: org.postgresql.Driver" > $DIR/liquibase.init.properties
+echo "url: $connectionPreBd" >> $DIR/liquibase.init.properties
+echo "username: $sUser" >> $DIR/liquibase.init.properties
+echo "password: $sUser" >> $DIR/liquibase.init.properties

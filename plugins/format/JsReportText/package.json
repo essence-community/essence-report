@@ -1,0 +1,17 @@
+{
+  "name": "@essence-report-format/JsReportText",
+  "version": "1.0.0",
+  "description": "Format Report",
+  "main": "index.js",
+  "author": "Ivan Artemov (honyrik@gmail.com)",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@essence-report/plugininf": "^1.0.0",
+    "jsreport-core": "^2.10.1",
+    "jsreport-text": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/jsreport-core": "^2.0.0"
+  }
+}

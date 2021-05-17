@@ -1,0 +1,25 @@
+{
+    "name": "@essence-report/plugininf",
+    "version": "1.0.0",
+    "description": "Общие классы",
+    "main": "index.js",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "MIT",
+    "dependencies": {
+        "@iarna/toml": "^2.2.5",
+        "lodash": "^4.17.21",
+        "moment": "^2.29.1",
+        "oracledb": "^5.1.0",
+        "pg": "^8.5.1",
+        "pg-cursor": "^2.5.2",
+        "pg-query-stream": "^4.0.0",
+        "rufus": "^0.5.7"
+    },
+    "devDependencies": {
+        "@types/node": "^10.12.12",
+        "@types/oracledb": "^4.1.0",
+        "@types/pg": "^7.4.11",
+        "@types/pg-query-stream": "^1.0.2",
+        "@types/yesql": "^3.2.1"
+    }
+}

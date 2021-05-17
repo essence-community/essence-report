@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "target": "es6",
+        "baseUrl": ".",
+        "paths": { "*": ["@types"] },
+        "types": ["node"],
+        "lib": ["es2018"],
+        "module": "commonjs",
+        "sourceMap": true,
+        "skipLibCheck": true,
+        "outDir": "./dist"
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "**/*.spec.ts", "@types"]
+}
