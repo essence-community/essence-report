@@ -2,7 +2,7 @@
     "name": "@essence-report/server",
     "version": "1.0.0",
     "description": "Essence Report Server",
-    "author": "Ivan Artemov (i.artemov@abr-region.ru)",
+    "author": "Ivan Artemov (honyrik@gmail.ru)",
     "license": "MIT",
     "main": "src/index.js",
     "scripts": {
