@@ -1,18 +1,23 @@
+/* eslint-disable max-lines-per-function */
 /* eslint-disable quotes */
 /* eslint-disable @typescript-eslint/no-var-requires */
 const fs = require("fs");
 const path = require("path");
 const gulp = require("gulp");
 const ts = require("gulp-typescript");
-const copyDir = require("copy-dir");
+const cpy = require("cpy");
 
 const homeDir = __dirname;
 
 function list(val) {
     return val.toUpperCase().split(",");
 }
-const includePlugins = process.env.INCLUDE_PLUGINS ? list(process.env.INCLUDE_PLUGINS) : null;
-const excludePlugins = process.env.EXCLUDE_PLUGINS ? list(process.env.EXCLUDE_PLUGINS) : null;
+const includePlugins = process.env.INCLUDE_PLUGINS
+    ? list(process.env.INCLUDE_PLUGINS)
+    : null;
+const excludePlugins = process.env.EXCLUDE_PLUGINS
+    ? list(process.env.EXCLUDE_PLUGINS)
+    : null;
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -24,68 +29,119 @@ gulp.task("plugins", () => {
             const pluginsDir = path.resolve(homeDir, "plugins", dir);
             const dirPlugins = path.join(homeDir, "dist", "plugins", dir);
 
-            fs.mkdirSync(dirPlugins, {recursive: true});
+            fs.mkdirSync(dirPlugins, { recursive: true });
             fs.readdirSync(pluginsDir)
                 .filter((file) => {
-                    let res = includePlugins && includePlugins.length ? false : true;
+                    let res =
+                        includePlugins && includePlugins.length ? false : true;
 
                     if (excludePlugins && excludePlugins.length) {
                         res =
-                            excludePlugins.filter((name) => name.trim().toUpperCase() === file.trim().toUpperCase())
-                                .length === 0;
+                            excludePlugins.filter(
+                                (name) =>
+                                    name.trim().toUpperCase() ===
+                                    file.trim().toUpperCase(),
+                            ).length === 0;
                     }
                     if (includePlugins && includePlugins.length) {
                         res =
-                            includePlugins.filter((name) => name.trim().toUpperCase() === file.trim().toUpperCase())
-                                .length > 0;
+                            includePlugins.filter(
+                                (name) =>
+                                    name.trim().toUpperCase() ===
+                                    file.trim().toUpperCase(),
+                            ).length > 0;
                     }
 
                     return res;
                 })
                 .forEach((file) => {
                     if (
-                        fs.existsSync(path.join(pluginsDir, file, "tsconfig.json")) &&
-                        fs.existsSync(path.join(pluginsDir, file, "package.json"))
+                        fs.existsSync(
+                            path.join(pluginsDir, file, "tsconfig.json"),
+                        ) &&
+                        fs.existsSync(
+                            path.join(pluginsDir, file, "package.json"),
+                        )
                     ) {
-                        const tsProject = ts.createProject(path.join(pluginsDir, file, "tsconfig.json"), {
-                            removeComments: !isDev,
-                            sourceMap: !isDev,
-                        });
+                        const tsProject = ts.createProject(
+                            path.join(pluginsDir, file, "tsconfig.json"),
+                            {
+                                removeComments: !isDev,
+                                sourceMap: !isDev,
+                            },
+                        );
 
                         rows.push(
                             new Promise((resolve, reject) => {
-                                gulp.src(path.join(pluginsDir, file, "src", "**", "*.ts"))
+                                gulp.src(
+                                    path.join(
+                                        pluginsDir,
+                                        file,
+                                        "src",
+                                        "**",
+                                        "*.ts",
+                                    ),
+                                )
                                     .pipe(tsProject())
-                                    .pipe(gulp.dest(path.join(dirPlugins, file)))
+                                    .pipe(
+                                        gulp.dest(path.join(dirPlugins, file)),
+                                    )
                                     .on("end", () => {
                                         const rows = [];
 
-                                        if (fs.existsSync(path.join(pluginsDir, file, "assets"))) {
+                                        if (
+                                            fs.existsSync(
+                                                path.join(
+                                                    pluginsDir,
+                                                    file,
+                                                    "assets",
+                                                ),
+                                            )
+                                        ) {
                                             rows.push(
-                                                new Promise((resolveChild, rejectChild) => {
-                                                    copyDir(
-                                                        path.join(pluginsDir, file, "assets"),
-                                                        path.join(dirPlugins, file, "assets"),
-                                                        (err) => {
-                                                            if (err) {
-                                                                return rejectChild(err);
-                                                            }
-                                                            resolveChild();
-                                                        },
-                                                    );
-                                                }),
+                                                cpy(
+                                                    ["**/*.*", "**/*"],
+                                                    path.join(
+                                                        dirPlugins,
+                                                        file,
+                                                        "assets",
+                                                    ),
+                                                    {
+                                                        cwd: path.join(
+                                                            pluginsDir,
+                                                            file,
+                                                            "assets",
+                                                        ),
+                                                        parents: true,
+                                                        dot: true,
+                                                    },
+                                                ),
                                             );
                                         }
                                         rows.push(
                                             new Promise((resolveChild) => {
                                                 const packageJson = JSON.parse(
-                                                    fs.readFileSync(path.join(pluginsDir, file, "package.json")),
+                                                    fs.readFileSync(
+                                                        path.join(
+                                                            pluginsDir,
+                                                            file,
+                                                            "package.json",
+                                                        ),
+                                                    ),
                                                 );
 
                                                 delete packageJson.devDependencies;
                                                 fs.writeFileSync(
-                                                    path.join(dirPlugins, file, "package.json"),
-                                                    JSON.stringify(packageJson, null, 4),
+                                                    path.join(
+                                                        dirPlugins,
+                                                        file,
+                                                        "package.json",
+                                                    ),
+                                                    JSON.stringify(
+                                                        packageJson,
+                                                        null,
+                                                        4,
+                                                    ),
                                                 );
                                                 resolveChild();
                                             }),
@@ -100,15 +156,23 @@ gulp.task("plugins", () => {
                             }),
                         );
                     } else if (file === "README") {
-                        fs.createReadStream(path.resolve(pluginsDir, file)).pipe(
-                            fs.createWriteStream(path.resolve(dirPlugins, file)),
+                        fs.createReadStream(
+                            path.resolve(pluginsDir, file),
+                        ).pipe(
+                            fs.createWriteStream(
+                                path.resolve(dirPlugins, file),
+                            ),
                         );
                     }
                 });
         } else if (dir === "README") {
-            fs.mkdirSync(path.resolve(homeDir, "dist", "plugins"), {recursive: true});
+            fs.mkdirSync(path.resolve(homeDir, "dist", "plugins"), {
+                recursive: true,
+            });
             fs.createReadStream(path.resolve(homeDir, "plugins", dir)).pipe(
-                fs.createWriteStream(path.resolve(homeDir, "dist", "plugins", dir)),
+                fs.createWriteStream(
+                    path.resolve(homeDir, "dist", "plugins", dir),
+                ),
             );
         }
     });
@@ -117,12 +181,15 @@ gulp.task("plugins", () => {
 });
 gulp.task("server", () => {
     const sourceDir = path.resolve(homeDir, "server", "src");
-    const tsProject = ts.createProject(path.join(homeDir, "server", "tsconfig.json"), {
-        removeComments: !isDev,
-        sourceMap: !isDev,
-    });
+    const tsProject = ts.createProject(
+        path.join(homeDir, "server", "tsconfig.json"),
+        {
+            removeComments: !isDev,
+            sourceMap: !isDev,
+        },
+    );
 
-    fs.mkdirSync(path.join(homeDir, "dist", "server"), {recursive: true});
+    fs.mkdirSync(path.join(homeDir, "dist", "server"), { recursive: true });
 
     return new Promise((resolve, reject) => {
         gulp.src(path.join(sourceDir, "**", "*.ts"))
@@ -132,28 +199,34 @@ gulp.task("server", () => {
                 const rows = [];
 
                 rows.push(
-                    new Promise((resolveChild, rejectChild) => {
-                        copyDir(path.join(sourceDir, "spec"), path.join(homeDir, "dist", "server", "spec"), (err) => {
-                            if (err) {
-                                return rejectChild(err);
-                            }
-                            resolveChild();
-                        });
-                    }),
+                    cpy(
+                        ["**/*.*", "**/*"],
+                        path.join(homeDir, "dist", "server", "spec"),
+                        {
+                            cwd: path.join(sourceDir, "spec"),
+                            parents: true,
+                            dot: true,
+                        },
+                    ),
                 );
                 rows.push(
-                    new Promise((resolveChild, rejectChild) => {
-                        copyDir(path.join(sourceDir, "config"), path.join(homeDir, "dist", "config"), (err) => {
-                            if (err) {
-                                return rejectChild(err);
-                            }
-                            resolveChild();
-                        });
-                    }),
+                    cpy(
+                        ["**/*.*", "**/*"],
+                        path.join(homeDir, "dist", "config"),
+                        {
+                            cwd: path.join(sourceDir, "config"),
+                            parents: true,
+                            dot: true,
+                        },
+                    ),
                 );
                 rows.push(
                     new Promise((resolveChild) => {
-                        const packageJson = JSON.parse(fs.readFileSync(path.join(homeDir, "server", "package.json")));
+                        const packageJson = JSON.parse(
+                            fs.readFileSync(
+                                path.join(homeDir, "server", "package.json"),
+                            ),
+                        );
 
                         delete packageJson.devDependencies;
                         packageJson.scripts = {
@@ -172,7 +245,12 @@ gulp.task("server", () => {
                             watch: false,
                         };
                         fs.writeFileSync(
-                            path.join(homeDir, "dist", "server", "package.json"),
+                            path.join(
+                                homeDir,
+                                "dist",
+                                "server",
+                                "package.json",
+                            ),
                             JSON.stringify(packageJson, null, 4),
                         );
                         resolveChild();
@@ -189,17 +267,26 @@ gulp.task("server", () => {
 });
 
 gulp.task("package", () => {
-    const packageJson = JSON.parse(fs.readFileSync(path.join(homeDir, "package.json")));
+    const packageJson = JSON.parse(
+        fs.readFileSync(path.join(homeDir, "package.json")),
+    );
 
     delete packageJson.devDependencies;
     delete packageJson["lint-staged"];
     delete packageJson.husky;
     packageJson.scripts = {
         start: "yarn workspace @essence-report/server run start",
-        "start:single": "yarn workspace @essence-report/server run start:single",
+        "start:single":
+            "yarn workspace @essence-report/server run start:single",
     };
-    fs.writeFileSync(path.join(homeDir, "dist", "package.json"), JSON.stringify(packageJson, null, 4));
-    fs.writeFileSync(path.resolve(homeDir, "dist", "yarn.lock"), fs.readFileSync(path.resolve(homeDir, "yarn.lock")));
+    fs.writeFileSync(
+        path.join(homeDir, "dist", "package.json"),
+        JSON.stringify(packageJson, null, 4),
+    );
+    fs.writeFileSync(
+        path.resolve(homeDir, "dist", "yarn.lock"),
+        fs.readFileSync(path.resolve(homeDir, "yarn.lock")),
+    );
 
     return Promise.resolve(true);
 });
@@ -211,22 +298,38 @@ gulp.task("plugininf", () => {
         fs.existsSync(path.join(plugininfDir, "tsconfig.json")) &&
         fs.existsSync(path.join(plugininfDir, "package.json"))
     ) {
-        const tsProject = ts.createProject(path.join(plugininfDir, "tsconfig.json"), {
-            removeComments: !isDev,
-            sourceMap: !isDev,
-        });
+        const tsProject = ts.createProject(
+            path.join(plugininfDir, "tsconfig.json"),
+            {
+                removeComments: !isDev,
+                sourceMap: !isDev,
+            },
+        );
 
         rows.push(
             new Promise((resolve, reject) => {
                 gulp.src(path.join(plugininfDir, "lib", "**", "*.ts"))
                     .pipe(tsProject())
-                    .pipe(gulp.dest(path.join(homeDir, "dist", "plugininf", "lib")))
+                    .pipe(
+                        gulp.dest(
+                            path.join(homeDir, "dist", "plugininf", "lib"),
+                        ),
+                    )
                     .on("end", () => {
-                        const pluginInfJson = JSON.parse(fs.readFileSync(path.join(plugininfDir, "package.json")));
+                        const pluginInfJson = JSON.parse(
+                            fs.readFileSync(
+                                path.join(plugininfDir, "package.json"),
+                            ),
+                        );
 
                         delete pluginInfJson.devDependencies;
                         fs.writeFileSync(
-                            path.join(homeDir, "dist", "plugininf", "package.json"),
+                            path.join(
+                                homeDir,
+                                "dist",
+                                "plugininf",
+                                "package.json",
+                            ),
                             JSON.stringify(pluginInfJson, null, 4),
                         );
                         resolve();

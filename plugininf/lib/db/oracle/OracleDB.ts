@@ -4,15 +4,15 @@
  * Created by artemov_i on 05.12.2018.
  */
 
-import {Readable, Transform, TransformCallback} from "stream";
-import {forEach, isObject, noop} from "lodash";
+import { Readable, Transform, TransformCallback } from "stream";
+import { forEach, isObject, noop } from "lodash";
 import * as oracledb from "oracledb";
-import {IRufusLogger} from "rufus";
-import {IParamsInfo} from "../../interfaces/ICCTParams";
-import {IResultProvider} from "../../interfaces/IResult";
+import { IRufusLogger } from "rufus";
+import { IParamsInfo } from "../../interfaces/ICCTParams";
+import { IResultProvider } from "../../interfaces/IResult";
 import Logger from "../../Logger";
-import {safePipe} from "../../stream/Util";
-import {initParams, isEmpty} from "../../utils/Base";
+import { safePipe } from "../../stream/Util";
+import { initParams, isEmpty } from "../../utils/Base";
 import Connection from "../Connection";
 import IOptions from "../../interfaces/IOptions";
 
@@ -126,18 +126,18 @@ export default class OracleDB {
                     {
                         ck_id: "NOTSET",
                     },
-                    {ck_id: "VERBOSE"},
-                    {ck_id: "DEBUG"},
-                    {ck_id: "INFO"},
-                    {ck_id: "WARNING"},
-                    {ck_id: "ERROR"},
-                    {ck_id: "CRITICAL"},
-                    {ck_id: "WARN"},
-                    {ck_id: "TRACE"},
-                    {ck_id: "FATAL"},
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
                 ],
                 type: "combo",
-                valueField: [{in: "ck_id"}],
+                valueField: [{ in: "ck_id" }],
             },
         };
     }
@@ -151,7 +151,9 @@ export default class OracleDB {
     private log: IRufusLogger;
     constructor(name: string, params: IOracleDBConfig) {
         if (!isObject(params) || Object.keys(params).length === 0) {
-            throw new Error("Не указанты параметры базы данных при вызове констуктора");
+            throw new Error(
+                "Не указанты параметры базы данных при вызове констуктора",
+            );
         }
         this.log = Logger.getLogger(`OracleDB ${name}`);
         if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
@@ -164,15 +166,23 @@ export default class OracleDB {
         }
         this.connectionConfig = initParams(OracleDB.getParamsInfo(), params);
         this.name = name;
-        this.partRows = this.connectionConfig.partRows || OracleDB.getParamsInfo().partRows.defaultValue;
+        this.partRows =
+            this.connectionConfig.partRows ||
+            (OracleDB.getParamsInfo().partRows.defaultValue as number);
         this.oracledb = oracledb;
         this.oracledb.outFormat = this.oracledb.OBJECT;
         this.oracledb.autoCommit = true;
-        this.oracledb.fetchAsString = [this.oracledb.CLOB, this.oracledb.NUMBER];
+        this.oracledb.fetchAsString = [
+            this.oracledb.CLOB,
+            this.oracledb.NUMBER,
+        ];
         this.oracledb.fetchAsBuffer = [this.oracledb.BLOB];
-        this.oracledb.maxRows = this.connectionConfig.maxRows || OracleDB.getParamsInfo().maxRows.defaultValue;
+        this.oracledb.maxRows =
+            this.connectionConfig.maxRows ||
+            OracleDB.getParamsInfo().maxRows.defaultValue;
         this.oracledb.prefetchRows =
-            this.connectionConfig.prefetchRows || OracleDB.getParamsInfo().prefetchRows.defaultValue;
+            this.connectionConfig.prefetchRows ||
+            OracleDB.getParamsInfo().prefetchRows.defaultValue;
         this.oracledb.stmtCacheSize = 200;
         this.oracledb.poolIncrement = 5;
         if (!isEmpty(params.queryTimeout)) {
@@ -201,7 +211,10 @@ export default class OracleDB {
                         resolve();
                     })
                     .catch((err) => {
-                        this.log.error(`Ошибка закрытия пула ${this.name}`, err);
+                        this.log.error(
+                            `Ошибка закрытия пула ${this.name}`,
+                            err,
+                        );
                         reject(err);
                     });
             } else {
@@ -238,10 +251,15 @@ export default class OracleDB {
                     connectString: this.connectionConfig.connectString,
                     password: this.connectionConfig.password,
                     poolAlias: this.name,
-                    poolMax: this.connectionConfig.poolMax || OracleDB.getParamsInfo().poolMax.defaultValue,
-                    poolMin: this.connectionConfig.poolMin || OracleDB.getParamsInfo().poolMin.defaultValue,
+                    poolMax:
+                        this.connectionConfig.poolMax ||
+                        OracleDB.getParamsInfo().poolMax.defaultValue,
+                    poolMin:
+                        this.connectionConfig.poolMin ||
+                        OracleDB.getParamsInfo().poolMin.defaultValue,
                     queueTimeout:
-                        this.connectionConfig.queueTimeout || OracleDB.getParamsInfo().queueTimeout.defaultValue,
+                        this.connectionConfig.queueTimeout ||
+                        OracleDB.getParamsInfo().queueTimeout.defaultValue,
                     user: this.connectionConfig.user,
                 })
                 .then((pool) => {
@@ -250,7 +268,11 @@ export default class OracleDB {
                     return resolve(pool);
                 })
                 .catch((err) => {
-                    if (err.message.indexOf(`poolAlias "${this.name}" already exists`) > -1) {
+                    if (
+                        err.message.indexOf(
+                            `poolAlias "${this.name}" already exists`,
+                        ) > -1
+                    ) {
                         return this.getPool(this.name).then((pool) => {
                             this.pool = pool;
 
@@ -291,7 +313,12 @@ export default class OracleDB {
 
                     return new Connection(this, "oracle", oconnect);
                 })
-                .catch(() => this.createPool().then(async (oconnect) => new Connection(this, "oracle", oconnect)));
+                .catch(() =>
+                    this.createPool().then(
+                        async (oconnect) =>
+                            new Connection(this, "oracle", oconnect),
+                    ),
+                );
         }
         if (this.pool && this.log.isDebugEnabled()) {
             this.log.debug(
@@ -304,7 +331,9 @@ export default class OracleDB {
             );
         }
 
-        return this.pool.getConnection().then((oconnect) => new Connection(this, "oracle", oconnect));
+        return this.pool
+            .getConnection()
+            .then((oconnect) => new Connection(this, "oracle", oconnect));
     }
 
     /**
@@ -312,7 +341,9 @@ export default class OracleDB {
      * @param conn
      * @returns {Promise.<*>}
      */
-    public async getConnectionNew(params?: IOracleDBConfig): Promise<Connection> {
+    public async getConnectionNew(
+        params?: IOracleDBConfig,
+    ): Promise<Connection> {
         if (params.poolAlias) {
             const pool = await this.getPool(params.poolAlias).catch(() =>
                 this.oracledb
@@ -324,20 +355,28 @@ export default class OracleDB {
                     })
                     .catch((err) => {
                         if (typeof err !== "undefined") {
-                            this.log.error("Ошибка подключения к базе данных", err);
+                            this.log.error(
+                                "Ошибка подключения к базе данных",
+                                err,
+                            );
 
                             return Promise.reject(new Error(err));
                         }
 
                         return new Promise((resolve, reject) => {
                             setTimeout(() => {
-                                this.getConnectionNew(params).then(resolve, reject);
+                                this.getConnectionNew(params).then(
+                                    resolve,
+                                    reject,
+                                );
                             }, 1000);
                         });
                     }),
             );
 
-            return pool.getConnection().then((oconnect) => new Connection(this, "oracle", oconnect));
+            return pool
+                .getConnection()
+                .then((oconnect) => new Connection(this, "oracle", oconnect));
         }
 
         return this.oracledb
@@ -357,7 +396,9 @@ export default class OracleDB {
      */
     public async open(params?: IOracleDBConfig): Promise<Connection> {
         try {
-            const connect = params ? await this.getConnectionNew(params) : await this.getConnection();
+            const connect = params
+                ? await this.getConnectionNew(params)
+                : await this.getConnection();
 
             return connect;
         } catch (err) {
@@ -404,7 +445,12 @@ export default class OracleDB {
      * @param conn
      * @returns {Promise.<void>}
      */
-    public onClose(conn?: oracledb.Connection | oracledb.ResultSet<Record<string, any>> | oracledb.Pool): any {
+    public onClose(
+        conn?:
+            | oracledb.Connection
+            | oracledb.ResultSet<Record<string, any>>
+            | oracledb.Pool,
+    ): any {
         if (conn) {
             return conn.close();
         }
@@ -503,7 +549,9 @@ export default class OracleDB {
                     params[key] = {
                         dir: this.oracledb.BIND_OUT,
                         maxSize: 65000,
-                        type: this.oracledb[outParam[key]] || this.oracledb.DEFAULT,
+                        type:
+                            this.oracledb[outParam[key]] ||
+                            this.oracledb.DEFAULT,
                     };
                 }
             });
@@ -555,18 +603,26 @@ export default class OracleDB {
         let estimateTimerId = null;
         const conn = inConnection
             ? inConnection
-            : await this.getConnection().then(async (oconnect) => oconnect.getCurrentConnection());
+            : await this.getConnection().then(async (oconnect) =>
+                  oconnect.getCurrentConnection(),
+              );
         const isRelease = isEmpty(inConnection) || options.isRelease;
 
         if (this.pool && this.log.isDebugEnabled()) {
-            const logParam = {...params};
+            const logParam = { ...params };
 
             delete logParam.cv_password;
             delete logParam.cv_hash_password;
             delete logParam.pwd;
-            this.log.trace(`execute sql:\n${sql}\nparams:\n${JSON.stringify(logParam)}`);
-            this.log.debug(`Provider pool: ${this.pool.poolAlias}, Connections open: ${this.pool.connectionsOpen}`);
-            this.log.debug(`Provider pool: ${this.pool.poolAlias}, Connections in use: ${this.pool.connectionsInUse}`);
+            this.log.trace(
+                `execute sql:\n${sql}\nparams:\n${JSON.stringify(logParam)}`,
+            );
+            this.log.debug(
+                `Provider pool: ${this.pool.poolAlias}, Connections open: ${this.pool.connectionsOpen}`,
+            );
+            this.log.debug(
+                `Provider pool: ${this.pool.poolAlias}, Connections in use: ${this.pool.connectionsInUse}`,
+            );
         }
         if (this.queryTimeout !== null) {
             estimateTimerId = setTimeout(() => {
@@ -592,7 +648,10 @@ export default class OracleDB {
                         metaData: this.extractMetaData(res.resultSet.metaData),
                         stream: res.resultSet.toQueryStream(),
                     };
-                    result.stream = safePipe(result.stream, this.DatasetSerializer(res.resultSet.metaData));
+                    result.stream = safePipe(
+                        result.stream,
+                        this.DatasetSerializer(res.resultSet.metaData),
+                    );
                 } else if (res.rows) {
                     result = {
                         metaData: this.extractMetaData(res.metaData),
@@ -606,7 +665,10 @@ export default class OracleDB {
                             },
                         }),
                     };
-                    result.stream = safePipe(result.stream, this.DatasetSerializer(res.metaData));
+                    result.stream = safePipe(
+                        result.stream,
+                        this.DatasetSerializer(res.metaData),
+                    );
                 } else if (res.rowsAffected) {
                     result = {
                         metaData: this.extractMetaData(res.metaData),
@@ -622,22 +684,37 @@ export default class OracleDB {
                             },
                         }),
                     };
-                    result.stream = safePipe(result.stream, this.DatasetSerializer(res.metaData));
+                    result.stream = safePipe(
+                        result.stream,
+                        this.DatasetSerializer(res.metaData),
+                    );
                 } else if (res.outBinds) {
                     let isNotCursor = true;
 
                     forEach<any>(res.outBinds, (value) => {
-                        if (isObject(value) && (value as oracledb.ResultSet<Record<string, any>>).toQueryStream) {
+                        if (
+                            isObject(value) &&
+                            (value as oracledb.ResultSet<Record<string, any>>)
+                                .toQueryStream
+                        ) {
                             isNotCursor = false;
                             result = {
                                 metaData: this.extractMetaData(
-                                    (value as oracledb.ResultSet<Record<string, any>>).metaData,
+                                    (value as oracledb.ResultSet<
+                                        Record<string, any>
+                                    >).metaData,
                                 ),
-                                stream: (value as oracledb.ResultSet<Record<string, any>>).toQueryStream(),
+                                stream: (value as oracledb.ResultSet<
+                                    Record<string, any>
+                                >).toQueryStream(),
                             };
                             result.stream = safePipe(
                                 result.stream,
-                                this.DatasetSerializer((value as oracledb.ResultSet<Record<string, any>>).metaData),
+                                this.DatasetSerializer(
+                                    (value as oracledb.ResultSet<
+                                        Record<string, any>
+                                    >).metaData,
+                                ),
                             );
                         }
                     });
@@ -654,7 +731,10 @@ export default class OracleDB {
                                 },
                             }),
                         };
-                        result.stream = safePipe(result.stream, this.DatasetSerializer(res.metaData));
+                        result.stream = safePipe(
+                            result.stream,
+                            this.DatasetSerializer(res.metaData),
+                        );
                     }
                 }
                 if (isRelease) {
@@ -707,7 +787,9 @@ export default class OracleDB {
      * @param metaData - Данные ответа
      * @constructor
      */
-    public DatasetSerializer(metaData: oracledb.Metadata<Record<string, any>>[]): Transform {
+    public DatasetSerializer(
+        metaData: oracledb.Metadata<Record<string, any>>[],
+    ): Transform {
         const column = {};
 
         if (metaData && metaData.length) {
@@ -722,7 +804,10 @@ export default class OracleDB {
                                   let result = value;
 
                                   if (value) {
-                                      if (value.indexOf(",") > -1 || value.indexOf(".") > -1) {
+                                      if (
+                                          value.indexOf(",") > -1 ||
+                                          value.indexOf(".") > -1
+                                      ) {
                                           result = value.replace(/,/g, ".");
                                           if (result.indexOf(".") === 0) {
                                               result = `0${result}`;
@@ -754,7 +839,11 @@ export default class OracleDB {
                     }
                     ret[column[key].name] = column[key].value(value);
                 });
-                const transform = (chunkData: any, encodeStr: string, callBack: TransformCallback) => {
+                const transform = (
+                    chunkData: any,
+                    encodeStr: string,
+                    callBack: TransformCallback,
+                ) => {
                     const ref = {};
 
                     forEach(column, (value: any, key) => {
@@ -771,7 +860,9 @@ export default class OracleDB {
         return trans;
     }
 
-    private extractMetaData(metaData: oracledb.Metadata<Record<string, any>>[] = []) {
+    private extractMetaData(
+        metaData: oracledb.Metadata<Record<string, any>>[] = [],
+    ) {
         return metaData.map((data) => {
             let datatype = "text";
 

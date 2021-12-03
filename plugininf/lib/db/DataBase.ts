@@ -2,10 +2,11 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as TOML from "@iarna/toml";
-import PostgresDB, {IPostgresDBConfig} from "../db/postgres/PostgresDB";
+import PostgresDB, { IPostgresDBConfig } from "../db/postgres/PostgresDB";
 
 export const DB_PROPERTY_FILE =
-    process.env.ESSENCE_REPORT_DB_PROPERTY || path.resolve(__dirname, "..", "..", "..", "config", "db_property.toml");
+    process.env.ESSENCE_REPORT_DB_PROPERTY ||
+    path.resolve(__dirname, "..", "..", "..", "config", "db_property.toml");
 
 export class DataBase {
     public pgDb: PostgresDB;
@@ -21,7 +22,11 @@ export class DataBase {
         if (process.env.DB_HOST) {
             this.property.connectString = `postgres://${process.env.DB_HOST}:${
                 process.env.DB_PORT ? process.env.DB_PORT : "5432"
-            }/${process.env.DB_DATABASE ? process.env.DB_DATABASE : "essence_report"}`;
+            }/${
+                process.env.DB_DATABASE
+                    ? process.env.DB_DATABASE
+                    : "essence_report"
+            }`;
         }
         if (process.env.DB_USERNAME) {
             this.property.user = process.env.DB_USERNAME;

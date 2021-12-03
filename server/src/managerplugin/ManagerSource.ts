@@ -58,6 +58,15 @@ export class ManagerSource {
             );
         });
         await Promise.all(
+            Object.values(this.dirs).map(async (filePath) => {
+                const pluginClass = await import(filePath);
+
+                if (pluginClass && pluginClass.InitSource) {
+                    await pluginClass.InitSource(this.pgSql);
+                }
+            }),
+        );
+        await Promise.all(
             params.map(async (param) => {
                 try {
                     switch (param.ck_d_source) {
@@ -104,9 +113,34 @@ export class ManagerSource {
                             }
                             break;
                         default:
-                            throw new Error(
-                                `Undefined source ${param.ck_id} type ${param.ck_d_source}`,
-                            );
+                            if (this.dirs[param.ck_d_source.toLowerCase()]) {
+                                const pluginClass = await import(
+                                    this.dirs[param.ck_d_source]
+                                );
+
+                                if (pluginClass) {
+                                    const plugin = pluginClass.default
+                                        ? new pluginClass.default(
+                                              param.ck_id,
+                                              param.cct_parameter,
+                                          )
+                                        : new pluginClass(
+                                              param.ck_id,
+                                              param.cct_parameter,
+                                          );
+
+                                    await plugin.init();
+                                    this.sources[param.ck_id] = plugin;
+                                } else {
+                                    throw new Error(
+                                        `Undefined source ${param.ck_id} plugin ${param.cv_plugin}`,
+                                    );
+                                }
+                            } else {
+                                throw new Error(
+                                    `Undefined source ${param.ck_id} type ${param.ck_d_source}`,
+                                );
+                            }
                     }
                 } catch (e) {
                     this.logger.error(
@@ -207,9 +241,34 @@ export class ManagerSource {
                         }
                         break;
                     default:
-                        throw new Error(
-                            `Undefined source ${param.ck_id} type ${param.ck_d_source}`,
-                        );
+                        if (this.dirs[param.ck_d_source.toLowerCase()]) {
+                            const pluginClass = await import(
+                                this.dirs[param.ck_d_source]
+                            );
+
+                            if (pluginClass) {
+                                const plugin = pluginClass.default
+                                    ? new pluginClass.default(
+                                          param.ck_id,
+                                          param.cct_parameter,
+                                      )
+                                    : new pluginClass(
+                                          param.ck_id,
+                                          param.cct_parameter,
+                                      );
+
+                                await plugin.init();
+                                this.sources[param.ck_id] = plugin;
+                            } else {
+                                throw new Error(
+                                    `Undefined source ${param.ck_id} plugin ${param.cv_plugin}`,
+                                );
+                            }
+                        } else {
+                            throw new Error(
+                                `Undefined source ${param.ck_id} type ${param.ck_d_source}`,
+                            );
+                        }
                 }
             } catch (e) {
                 this.logger.error(

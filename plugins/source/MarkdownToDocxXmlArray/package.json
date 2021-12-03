@@ -1,0 +1,21 @@
+{
+  "name": "@essence-report-source/markdown-to-docx-xml-array",
+  "version": "1.0.0",
+  "description": "Markdown to docx xml",
+  "main": "index.js",
+  "author": "Ivan Artemov (honyrik@gmail.com)",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@essence-report/plugininf": "^1.0.0",
+    "adm-zip": "^0.5.5",
+    "jsreport-core": "^2.10.1",
+    "lodash": "^4.17.21",
+    "uuid": "^8.3.2",
+    "xmldom": "^0.6.0",
+    "xpath": "^0.0.32"
+  },
+  "devDependencies": {
+    "@types/jsreport-core": "^2.0.0"
+  }
+}

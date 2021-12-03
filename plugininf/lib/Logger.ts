@@ -6,7 +6,8 @@ import * as path from "path";
 import * as rufus from "rufus";
 
 export const LOGGER_FILE =
-    process.env.ESSENCE_REPORT_LOGGER_PROPERTY || path.resolve(__dirname, "..", "..", "config", "logger.json");
+    process.env.ESSENCE_REPORT_LOGGER_PROPERTY ||
+    path.resolve(__dirname, "..", "..", "config", "logger.json");
 
 const re = /"level":\s*"([^"]+)"/gi;
 
@@ -24,12 +25,18 @@ class Logger {
                 (err, strConf) => {
                     if (err) {
                         // tslint:disable-next-line:no-console
-                        console.error("Ошибка инициализации настроек логера", err);
+                        console.error(
+                            "Ошибка инициализации настроек логера",
+                            err,
+                        );
                     }
                     let findLevel = re.exec(strConf);
 
                     while (findLevel !== null) {
-                        strConf = strConf.replace(`"${findLevel[1]}"`, rufus[findLevel[1].toUpperCase()]);
+                        strConf = strConf.replace(
+                            `"${findLevel[1]}"`,
+                            rufus[findLevel[1].toUpperCase()],
+                        );
                         findLevel = re.exec(strConf);
                     }
                     // tslint:disable-next-line:no-console
@@ -78,5 +85,5 @@ if (fs.existsSync(pathConf)) {
 Logger.loadConfig();
 Logger.getLogger("Logger").info("Init Logger");
 
-export {IRufusLogger} from "rufus";
+export { IRufusLogger } from "rufus";
 export default Logger;

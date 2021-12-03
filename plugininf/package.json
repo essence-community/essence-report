@@ -7,19 +7,26 @@
     "license": "MIT",
     "dependencies": {
         "@iarna/toml": "^2.2.5",
+        "esprima": "^4.0.1",
+        "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
         "moment": "^2.29.1",
         "oracledb": "^5.1.0",
         "pg": "^8.5.1",
         "pg-cursor": "^2.5.2",
         "pg-query-stream": "^4.0.0",
+        "qs": "^6.10.1",
         "rufus": "^0.5.7"
     },
     "devDependencies": {
+        "@types/esprima": "^4.0.3",
+        "@types/js-yaml": "^4.0.5",
         "@types/node": "^10.12.12",
         "@types/oracledb": "^4.1.0",
         "@types/pg": "^7.4.11",
         "@types/pg-query-stream": "^1.0.2",
-        "@types/yesql": "^3.2.1"
+        "@types/qs": "^6.9.7",
+        "@types/yesql": "^3.2.1",
+        "@typescript-eslint/typescript-estree": "^5.5.0"
     }
 }

@@ -513,14 +513,9 @@ export class ReportSystem {
     ) {
         await Promise.all(
             res.map(async (data) => {
-                const param = Object.entries(data).reduce(
-                    (obj, [key, value]) => {
-                        obj[`parent_${key}`] = value;
-
-                        return obj;
-                    },
-                    {},
-                );
+                const param = {
+                    jt_parent_result: data,
+                };
 
                 await Promise.all(
                     reportData.reportQuery

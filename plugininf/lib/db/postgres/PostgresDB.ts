@@ -1,17 +1,17 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable max-statements */
-import {Readable, Transform, TransformCallback} from "stream";
+import { Readable, Transform, TransformCallback } from "stream";
 import * as URL from "url";
-import {forEach, isObject, noop} from "lodash";
+import { forEach, isObject, noop } from "lodash";
 import * as pg from "pg";
 // @ts-ignore
 import * as QueryStream from "pg-query-stream";
-import {IRufusLogger} from "rufus";
-import {IParamsInfo} from "../../interfaces/ICCTParams";
-import {IResultProvider} from "../../interfaces/IResult";
+import { IRufusLogger } from "rufus";
+import { IParamsInfo } from "../../interfaces/ICCTParams";
+import { IResultProvider } from "../../interfaces/IResult";
 import Logger from "../../Logger";
-import {safePipe} from "../../stream/Util";
-import {initParams, isEmpty} from "../../utils/Base";
+import { safePipe } from "../../stream/Util";
+import { initParams, isEmpty } from "../../utils/Base";
 import Connection from "../Connection";
 import IOptions from "../../interfaces/IOptions";
 
@@ -112,18 +112,18 @@ export default class PostgresDB {
                     {
                         ck_id: "NOTSET",
                     },
-                    {ck_id: "VERBOSE"},
-                    {ck_id: "DEBUG"},
-                    {ck_id: "INFO"},
-                    {ck_id: "WARNING"},
-                    {ck_id: "ERROR"},
-                    {ck_id: "CRITICAL"},
-                    {ck_id: "WARN"},
-                    {ck_id: "TRACE"},
-                    {ck_id: "FATAL"},
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
                 ],
                 type: "combo",
-                valueField: [{in: "ck_id"}],
+                valueField: [{ in: "ck_id" }],
             },
             /* tslint:enable:object-literal-sort-keys */
         };
@@ -143,7 +143,9 @@ export default class PostgresDB {
         this.connectionConfig = initParams(PostgresDB.getParamsInfo(), params);
 
         if (!this.connectionConfig.connectString) {
-            throw new Error("Не указан параметр connectString при вызове констуктора");
+            throw new Error(
+                "Не указан параметр connectString при вызове констуктора",
+            );
         }
         this.log = Logger.getLogger(`PostgresDB ${name}`);
         if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
@@ -160,7 +162,9 @@ export default class PostgresDB {
             this.queryTimeout = null;
         }
 
-        this.partRows = this.connectionConfig.partRows || PostgresDB.getParamsInfo().partRows.defaultValue;
+        this.partRows =
+            this.connectionConfig.partRows ||
+            (PostgresDB.getParamsInfo().partRows.defaultValue as number);
         this.pg = pg;
     }
 
@@ -210,16 +214,21 @@ export default class PostgresDB {
             database: connectionString.path.substr(1),
             connectionTimeoutMillis:
                 this.connectionConfig.connectionTimeoutMillis ||
-                PostgresDB.getParamsInfo().connectionTimeoutMillis.defaultValue,
+                (PostgresDB.getParamsInfo().connectionTimeoutMillis
+                    .defaultValue as number),
             idleTimeoutMillis:
-                this.connectionConfig.idleTimeoutMillis || PostgresDB.getParamsInfo().idleTimeoutMillis.defaultValue,
+                this.connectionConfig.idleTimeoutMillis ||
+                (PostgresDB.getParamsInfo().idleTimeoutMillis
+                    .defaultValue as number),
             max: this.connectionConfig.poolMax || 4,
             min: this.connectionConfig.poolMin || 0,
         });
 
         /* tslint:enable:object-literal-sort-keys */
         this.pool = pool;
-        pool.on("error", (err) => this.log.error(`PG Pool error ${err.message}`, err));
+        pool.on("error", (err) =>
+            this.log.error(`PG Pool error ${err.message}`, err),
+        );
 
         return Promise.resolve(pool);
     }
@@ -247,7 +256,9 @@ export default class PostgresDB {
     public getConnectionNew(params: IPostgresDBConfig): Promise<Connection> {
         const client = new pg.Client(params as pg.ClientConfig);
 
-        return client.connect().then(async () => new Connection(this, "postgresql", client));
+        return client
+            .connect()
+            .then(async () => new Connection(this, "postgresql", client));
     }
 
     /**
@@ -407,16 +418,20 @@ export default class PostgresDB {
         let result;
         const conn: pg.Client | pg.PoolClient = inConnection
             ? inConnection
-            : await this.getConnection().then(async (c) => c.getCurrentConnection());
+            : await this.getConnection().then(async (c) =>
+                  c.getCurrentConnection(),
+              );
         const isRelease = isEmpty(inConnection) || options.isRelease;
 
         if (this.log.isDebugEnabled()) {
-            const logParam = {...params};
+            const logParam = { ...params };
 
             delete logParam.cv_password;
             delete logParam.cv_hash_password;
             delete logParam.pwd;
-            this.log.trace(`execute sql:\n${sql}\nparams:\n${JSON.stringify(logParam)}`);
+            this.log.trace(
+                `execute sql:\n${sql}\nparams:\n${JSON.stringify(logParam)}`,
+            );
         }
 
         if (this.queryTimeout !== null && !options.resultSet) {
@@ -441,7 +456,9 @@ export default class PostgresDB {
                 );
 
                 result = {
-                    metaData: this.extractMetaData((stream as any).cursor._result.fields),
+                    metaData: this.extractMetaData(
+                        (stream as any).cursor._result.fields,
+                    ),
                     stream,
                 };
                 await new Promise<void>((resolve, reject) => {
@@ -451,7 +468,9 @@ export default class PostgresDB {
                         if (isData) {
                             return;
                         }
-                        result.metaData = this.extractMetaData((stream as any).cursor._result.fields);
+                        result.metaData = this.extractMetaData(
+                            (stream as any).cursor._result.fields,
+                        );
                         result.stream = new Readable({
                             highWaterMark: this.partRows,
                             objectMode: true,
@@ -470,14 +489,19 @@ export default class PostgresDB {
                             stream.unshift(chunk);
                         }
                         isData = true;
-                        result.metaData = this.extractMetaData((stream as any).cursor._result.fields);
+                        result.metaData = this.extractMetaData(
+                            (stream as any).cursor._result.fields,
+                        );
                         stream.removeListener("readable", reader);
                         resolve();
                     };
 
                     stream.on("readable", reader);
                 });
-                result.stream = safePipe(result.stream, this.DatasetSerializer());
+                result.stream = safePipe(
+                    result.stream,
+                    this.DatasetSerializer(),
+                );
                 result.stream.on("end", () => {
                     if (estimateTimerId !== null) {
                         clearTimeout(estimateTimerId);
@@ -495,7 +519,9 @@ export default class PostgresDB {
             if (options.autoCommit) {
                 res = await conn.query(query.text, query.values);
             } else {
-                res = await conn.query("BEGIN").then(() => conn.query(query.text, query.values));
+                res = await conn
+                    .query("BEGIN")
+                    .then(() => conn.query(query.text, query.values));
             }
             if (estimateTimerId !== null) {
                 clearTimeout(estimateTimerId);
@@ -513,7 +539,10 @@ export default class PostgresDB {
                         },
                     }),
                 };
-                result.stream = safePipe(result.stream, this.DatasetSerializer());
+                result.stream = safePipe(
+                    result.stream,
+                    this.DatasetSerializer(),
+                );
             }
             if (isRelease) {
                 result.stream.on("end", () => {
@@ -572,7 +601,11 @@ export default class PostgresDB {
                         name: key.toLowerCase(),
                     };
                 });
-                const transform = (chunkData: any, encodeStr: string, callBack: TransformCallback) => {
+                const transform = (
+                    chunkData: any,
+                    encodeStr: string,
+                    callBack: TransformCallback,
+                ) => {
                     const ref = {};
 
                     forEach(column, (value: any, key) => {
