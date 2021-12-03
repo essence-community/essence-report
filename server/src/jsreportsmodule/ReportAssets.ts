@@ -12,8 +12,8 @@ import * as ReplaceAsync from "async-replace";
 import * as jsStringEscape from "js-string-escape";
 import * as etag from "etag";
 import * as mime from "mime";
-import strimBomBuffer from "strip-bom-buf";
 import { response } from "jsreport-office";
+import isUtf8 from 'is-utf8';
 
 const test = /{#asset ([^{}]{0,500})}/g;
 const imageTest = /\.(jpeg|jpg|gif|png|svg)$/;
@@ -26,6 +26,17 @@ function isFont(name) {
     return name.match(fontTest) != null;
 }
 
+export function strimBomBuffer(buffer) {
+	if (!Buffer.isBuffer(buffer)) {
+		throw new TypeError(`Expected a \`Buffer\`, got \`${typeof buffer}\``);
+	}
+
+	if (buffer[0] === 0xEF && buffer[1] === 0xBB && buffer[2] === 0xBF && isUtf8(buffer)) {
+		return buffer.slice(3);
+	}
+
+	return buffer;
+}
 async function readAsset(reporter, definition, id, name, encoding, req) {
     const allowAssetsLinkedToFiles =
         definition.options.allowAssetsLinkedToFiles !== false;
