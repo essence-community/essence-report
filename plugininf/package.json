@@ -27,6 +27,6 @@
         "@types/pg-query-stream": "^1.0.2",
         "@types/qs": "^6.9.7",
         "@types/yesql": "^3.2.1",
-        "@typescript-eslint/typescript-estree": "^5.5.0"
+        "@typescript-eslint/typescript-estree": "^4.32.0"
     }
 }

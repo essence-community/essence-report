@@ -12,8 +12,7 @@ import * as ReplaceAsync from "async-replace";
 import * as jsStringEscape from "js-string-escape";
 import * as etag from "etag";
 import * as mime from "mime";
-// @ts-ignore
-import * as stripBom from "strip-bom-buf";
+import strimBomBuffer from "strip-bom-buf";
 import { response } from "jsreport-office";
 
 const test = /{#asset ([^{}]{0,500})}/g;
@@ -386,7 +385,7 @@ async function readFile(reporter, definition, link) {
         });
 
         return {
-            content: stripBom(content),
+            content: strimBomBuffer(content),
             filename: path.basename(pathToLinkedFile),
             modified: stat.mtime,
         };

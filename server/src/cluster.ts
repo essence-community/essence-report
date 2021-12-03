@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 "use strict";
 
-import * as cluster from "cluster";
+import * as cl from "cluster";
 import Logger from "@essence-report/plugininf/lib/Logger";
 import { CLUSTER_NUM } from "./constant";
 import { start } from "./node";
 
 const logger = Logger.getLogger("Cluster");
+const cluster: cl.Cluster = cl as any;
 
-// tslint:disable:no-console
 if (cluster.isMaster) {
     const n = CLUSTER_NUM;
 
