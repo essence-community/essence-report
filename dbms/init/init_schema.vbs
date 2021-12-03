@@ -10,7 +10,7 @@ currDir = fso.GetParentFolderName(Wscript.ScriptFullName)
 WshShell.CurrentDirectory = currDir
 
 If fso.FileExists(currDir & "\liquibase.init.properties") Then
-    commadLiquibase = currDir & "\..\liquibase\liquibase.bat --defaultsFile=liquibase.init.properties --changeLogFile=db.changelog.init.xml update"
+    commadLiquibase = "cd "& currDir & "\.. && gradlew.bat update -PrunList=init"
 
     set WshExec = WshShell.Exec(commadLiquibase)
     Set TextStream = WshExec.StdOut
@@ -105,7 +105,7 @@ End Function
 ReplaceSchema(currDir & "\db.sql")
 ReplaceSchema(currDir & "\db.changelog.init.xml")
 
-commadLiquibase = currDir & "\..\liquibase\liquibase.bat --username=#schemaConnectionAdmin# --password=#schemaConnectionAdminPw# --url=#schemaConnection# --driver=org.postgresql.Driver --changeLogFile=db.changelog.init.xml update"
+commadLiquibase = "cd " & currDir & "\.. && gradlew.bat update -PrunList=init -Pliquibase.username=#schemaConnectionAdmin# -Pliquibase.password=#schemaConnectionAdminPw# -Pliquibase.url=#schemaConnection# -Pliquibase.driver=org.postgresql.Driver"
 commadLiquibase = Replace(commadLiquibase, "#schemaConnection#", connectionPreBd)
 commadLiquibase = Replace(commadLiquibase, "#schemaConnectionAdmin#", sUser)
 commadLiquibase = Replace(commadLiquibase, "#schemaConnectionAdminPw#", sPw)

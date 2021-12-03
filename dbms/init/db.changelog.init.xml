@@ -11,5 +11,5 @@
   <property name="user.admin" value="s_su"/>
   <property name="name.db" value="essence_report"/>
   
-  <include file="./db.sql" />
+  <include file="db.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
