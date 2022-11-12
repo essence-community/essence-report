@@ -43,7 +43,7 @@
         "lodash": "^4.17.21",
         "marked": "^4.0.6",
         "mime": "^3.0.0",
-        "minimatch": "^3.0.4",
+        "minimatch": "^3.0.5",
         "nodemon": "^2.0.7",
         "react-copy-to-clipboard": "^5.0.3",
         "rufus": "^0.5.7",
