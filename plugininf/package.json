@@ -15,7 +15,7 @@
         "pg": "^8.5.1",
         "pg-cursor": "^2.5.2",
         "pg-query-stream": "^4.0.0",
-        "qs": "^6.10.1",
+        "qs": "^6.10.3",
         "rufus": "^0.5.7"
     },
     "devDependencies": {
