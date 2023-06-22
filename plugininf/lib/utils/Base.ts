@@ -5,6 +5,7 @@ import { isString, toString, toNumber } from "lodash";
 import * as moment from "moment";
 import { IParamInfo, IParamsInfo } from "../interfaces/ICCTParams";
 import Constant from "../Constant";
+import * as cu from "./cryptoUtil";
 
 export function isEmpty(value: any, allowEmptyString = false) {
     return (
@@ -18,18 +19,13 @@ function decryptAes(
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
-    const key = crypto.scryptSync(
+    const key = cu.getKeyFromPassword(
+        type,
         Constant.PW_KEY_SECRET,
         Constant.PW_SALT_SECRET,
-        32,
     );
-    const iv = Constant.PW_IV_SECRET;
 
-    const cipher = crypto.createDecipheriv(type, key, iv);
-
-    cipher.update(Buffer.from(data, "hex"));
-
-    return cipher.final().toString();
+    return cu.decrypt(type, data, key);
 }
 
 function decryptUseKey(data: string): string {
@@ -50,21 +46,16 @@ export function encryptAes(
 ): string {
     if (!Constant.PW_KEY_SECRET) {
         throw new Error(
-            "Not found key, need init environment ESSSENCE_PW_KEY_SECRET",
+            "Not found key, need init environment ESSENCE_PW_KEY_SECRET",
         );
     }
-    const key = crypto.scryptSync(
+    const key = cu.getKeyFromPassword(
+        type,
         Constant.PW_KEY_SECRET,
         Constant.PW_SALT_SECRET,
-        32,
     );
-    const iv = Constant.PW_IV_SECRET;
 
-    const cipher = crypto.createCipheriv(type, key, iv);
-
-    cipher.update(Buffer.from(data));
-
-    return cipher.final().toString("hex");
+    return cu.encrypt(type, data, key);
 }
 
 export function encryptUseKey(data: string): string {
@@ -372,12 +363,15 @@ export const deepFind = (
             val === "*" &&
             (current[val] === undefined || current[val] === null)
         ) {
-            const arr = (Array.isArray(current)
-                ? current.map((obj) => deepFind(obj, paths.slice(idx + 1))[1])
-                : Object.entries(current).map(
-                      ([, obj]) =>
-                          deepFind(obj as any, paths.slice(idx + 1))[1],
-                  )
+            const arr = (
+                Array.isArray(current)
+                    ? current.map(
+                          (obj) => deepFind(obj, paths.slice(idx + 1))[1],
+                      )
+                    : Object.entries(current).map(
+                          ([, obj]) =>
+                              deepFind(obj as any, paths.slice(idx + 1))[1],
+                      )
             ).filter((val) => val !== undefined && val !== null);
 
             return [arr.length > 0, arr];

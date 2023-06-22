@@ -17,7 +17,7 @@ import IOptions from "../../interfaces/IOptions";
 
 const re = /(?!\B'[^']*):(\w+)(?![^']*'\B)/gi;
 const prepareSql = (query: string) => {
-    return (data: Record<string, any>) => {
+    return (data: any) => {
         const values = [];
 
         return {
@@ -54,6 +54,8 @@ export interface IPostgresDBConfig {
     user?: string;
     password?: string;
     lvl_logger?: string;
+    poolPg?: string | Record<string, any>;
+    setConnectionParam?: string;
 }
 interface IParams {
     [key: string]: string | boolean | number | Record<string, any>;
@@ -105,6 +107,18 @@ export default class PostgresDB {
                 name: "Время выполнения запроса",
                 type: "integer",
             },
+            poolPg: {
+                name: "Extra Postgres param",
+                type: "long_string",
+                defaultValue: "{}",
+                description: "https://node-postgres.com/api/pool",
+            },
+            setConnectionParam: {
+                name: "Extra set param connection",
+                type: "long_string",
+                defaultValue: "{}",
+                description: "set ...",
+            },
             lvl_logger: {
                 displayField: "ck_id",
                 name: "Level logger",
@@ -137,8 +151,10 @@ export default class PostgresDB {
     public pool?: pg.Pool;
 
     private log: IRufusLogger;
+    private setAppData: string[] = [];
     constructor(name: string, params: IPostgresDBConfig) {
         this.name = name;
+        let setConnectionParam = {};
 
         this.connectionConfig = initParams(PostgresDB.getParamsInfo(), params);
 
@@ -146,6 +162,27 @@ export default class PostgresDB {
             throw new Error(
                 "Не указан параметр connectString при вызове констуктора",
             );
+        }
+        if (
+            typeof this.connectionConfig.poolPg === "string" &&
+            this.connectionConfig.poolPg.startsWith("{") &&
+            this.connectionConfig.poolPg.endsWith("}")
+        ) {
+            this.connectionConfig.poolPg = JSON.parse(
+                this.connectionConfig.poolPg,
+            );
+        }
+        if (
+            typeof this.connectionConfig.setConnectionParam === "string" &&
+            this.connectionConfig.setConnectionParam.startsWith("{") &&
+            this.connectionConfig.setConnectionParam.endsWith("}")
+        ) {
+            setConnectionParam = JSON.parse(
+                this.connectionConfig.setConnectionParam,
+            );
+        }
+        if (typeof this.connectionConfig.setConnectionParam === "object") {
+            setConnectionParam = this.connectionConfig.setConnectionParam;
         }
         this.log = Logger.getLogger(`PostgresDB ${name}`);
         if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
@@ -165,6 +202,10 @@ export default class PostgresDB {
         this.partRows =
             this.connectionConfig.partRows ||
             (PostgresDB.getParamsInfo().partRows.defaultValue as number);
+
+        Object.entries(setConnectionParam).forEach(([key, value]) => {
+            this.setAppData.push(`set ${key} = ${value};`);
+        });
         this.pg = pg;
     }
 
@@ -206,6 +247,9 @@ export default class PostgresDB {
         const [user, pass] = (connectionString.auth || "").split(":");
         /* tslint:disable:object-literal-sort-keys */
         const pool = new pg.Pool({
+            ...(typeof this.connectionConfig.poolPg === "object"
+                ? this.connectionConfig.poolPg
+                : {}),
             application_name: this.name,
             host: connectionString.hostname,
             port: parseInt(connectionString.port || "5432", 10),
@@ -238,14 +282,22 @@ export default class PostgresDB {
      * @param conn
      * @returns {Promise.<*>}
      */
-    public getConnection(conn?: any): Promise<Connection> {
+    public async getConnection(conn?: Connection): Promise<Connection> {
         if (conn) {
             return Promise.resolve(conn);
         }
 
         return this.getPool()
             .then((pool) => pool.connect())
-            .then(async (pgconn) => new Connection(this, "postgresql", pgconn));
+            .then(async (pgconn) => {
+                if (this.setAppData.length) {
+                    await Promise.all(
+                        this.setAppData.map((sql) => pgconn.query(sql)),
+                    );
+                }
+
+                return new Connection(this, "postgresql", pgconn);
+            });
     }
 
     /**
@@ -256,9 +308,15 @@ export default class PostgresDB {
     public getConnectionNew(params: IPostgresDBConfig): Promise<Connection> {
         const client = new pg.Client(params as pg.ClientConfig);
 
-        return client
-            .connect()
-            .then(async () => new Connection(this, "postgresql", client));
+        return client.connect().then(async () => {
+            if (this.setAppData.length) {
+                await Promise.all(
+                    this.setAppData.map((sql) => client.query(sql)),
+                );
+            }
+
+            return new Connection(this, "postgresql", client);
+        });
     }
 
     /**
@@ -278,7 +336,7 @@ export default class PostgresDB {
     public onClose(conn?: pg.Client | pg.PoolClient): Promise<void> {
         if (conn) {
             return (conn as pg.PoolClient).release
-                ? new Promise((resolve) => {
+                ? new Promise<void>((resolve) => {
                       (conn as pg.PoolClient).release();
                       resolve();
                   })
