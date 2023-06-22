@@ -11,13 +11,13 @@ function initNodeHttp(id: string) {
         UNGATE_HTTP_ID: id,
     });
     workers[node.process.pid] = id;
-    node.on('uncaughtException', (err, origin) => {
-        logger.error('HTTP id: %s, Uncaught Exception at: %s\nreason: %s', id, err, origin, err);
-        node.destroy("1")
-    });
 }
 process.on("unhandledRejection", (reason, promise) => {
     logger.error('HTTP Unhandled Rejection at: %s\nreason: %s', promise, reason);
+});
+process.on('uncaughtException', (err, origin) => {
+    logger.error('HTTP id: %s, Uncaught Exception at: %s\nreason: %s', process.env.UNGATE_HTTP_ID, err, origin);
+    process.exit(1)
 });
 
 if (cluster.isMaster) {
