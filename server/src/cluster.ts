@@ -8,15 +8,15 @@ const workers = {};
 function initNodeHttp(id: string) {
     const node = cluster.fork({
         ...process.env,
-        UNGATE_HTTP_ID: id,
+        NODE_HTTP_ID: id,
     });
     workers[node.process.pid] = id;
 }
 process.on("unhandledRejection", (reason, promise) => {
-    logger.error('HTTP Unhandled Rejection at: %s\nreason: %s', promise, reason);
+    logger.error('HTTP id: %s, Unhandled Rejection at: %s\nreason: %s', process.env.NODE_HTTP_ID || "master", promise, reason);
 });
 process.on('uncaughtException', (err, origin) => {
-    logger.error('HTTP id: %s, Uncaught Exception at: %s\nreason: %s', process.env.UNGATE_HTTP_ID, err, origin);
+    logger.error('HTTP id: %s, Uncaught Exception at: %s\nreason: %s', process.env.NODE_HTTP_ID || "master", err, origin);
     process.exit(1)
 });
 
