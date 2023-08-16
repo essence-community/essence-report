@@ -1,10 +1,9 @@
-/* eslint-disable max-lines-per-function */
-import * as util from "util";
+import * as moment from "moment-timezone";
 import * as lodash from "lodash";
-
+/* tslint:disable:max-classes-per-file */
+/* tslint:disable triple-equals */
 /* eslint-disable @typescript-eslint/no-use-before-define, no-use-before-define */
 import * as esprima from "esprima";
-
 import {
     Expression,
     Property,
@@ -14,12 +13,15 @@ import {
     UnaryExpression,
     Statement,
     Function as IFunction,
+    Literal,
     // eslint-disable-next-line import/no-extraneous-dependencies, import/extensions, import/no-unresolved
+    // @ts-ignore
 } from "estree";
-import * as QS from "qs";
-import * as YAML from "js-yaml";
 import Logger from "../Logger";
 import { isEmpty } from "../utils/Base";
+import * as util from "util";
+import * as QS from "qs";
+import * as YAML from "js-yaml";
 
 interface IGetValue {
     get: (key: string) => any;
@@ -50,6 +52,12 @@ const operators: any = {
         parseOperations(left, values) && parseOperations(right, values),
     "+": ({ left, right }: LogicalExpression, values: IValues) =>
         parseOperations(left, values) + parseOperations(right, values),
+    "-": ({ left, right }: LogicalExpression, values: IValues) =>
+        parseOperations(left, values) - parseOperations(right, values),
+    "*": ({ left, right }: LogicalExpression, values: IValues) =>
+        parseOperations(left, values) * parseOperations(right, values),
+    "/": ({ left, right }: LogicalExpression, values: IValues) =>
+        parseOperations(left, values) / parseOperations(right, values),
     "<": ({ left, right }: LogicalExpression, values: IValues) =>
         parseOperations(left, values) < parseOperations(right, values),
     "==": ({ left, right }: LogicalExpression, values: IValues) =>
@@ -61,7 +69,6 @@ const operators: any = {
         parseOperations(left, values) > parseOperations(right, values),
     in: ({ left, right }: LogicalExpression, values: IValues) => {
         let value = parseOperations(right, values);
-
         if (
             typeof value === "string" &&
             value.startsWith("[") &&
@@ -73,7 +80,6 @@ const operators: any = {
                 logger.warn("Parsed error %s", value, err);
             }
         }
-
         return (
             (Array.isArray(value) ? value : [value]).indexOf(
                 parseOperations(left, values),
@@ -95,6 +101,7 @@ const utils = {
     Array,
     encodeURIComponent,
     decodeURIComponent,
+    moment,
 };
 
 function parseOperations(
@@ -115,18 +122,28 @@ function parseOperations(
             return expression.expressions.map((exp: Expression) =>
                 parseOperations(exp, values),
             );
-        case "Literal":
+        case "Literal".endsWith:
             // @ts-ignore
-            if (expression.isMember) {
-                return (
-                    (values.get
-                        ? // @ts-ignore
-                          values.get(expression.value, true)
-                        : // @ts-ignore
-                          values[expression.value]) || expression.value
-                );
-            }
+            if (
+                expression.isMember &&
+                (typeof expression.raw == "undefined" ||
+                    (!(
+                        expression.raw.startsWith('"') &&
+                        expression.raw.endsWith('"')
+                    ) &&
+                        !(
+                            expression.raw.startsWith("'") &&
+                            expression.raw.endsWith("'")
+                        )))
+            ) {
+                const value = values.get
+                    ? // @ts-ignore
+                      values.get(expression.value, true)
+                    : // @ts-ignore
+                      values[expression.value];
 
+                return value === 0 ? value : value || expression.value;
+            }
             return expression.value;
         case "Identifier":
             // @ts-ignore
@@ -145,14 +162,15 @@ function parseOperations(
             if (!expression.isMember && expression.name === "false") {
                 return false;
             }
+            const value = values.get
+                ? // @ts-ignore
+                  values.get(expression.name, true)
+                : // @ts-ignore
+                  values[expression.name];
 
-            return (
-                (values.get
-                    ? values.get(expression.name, true)
-                    : values[expression.name]) ||
-                // @ts-ignore
-                (expression.isMember && expression.name)
-            );
+            return value === 0
+                ? value
+                : value || (expression.isMember && expression.name);
         case "AssignmentExpression":
             return parseOperations(expression.right, values);
         case "ObjectExpression":
@@ -184,7 +202,6 @@ function parseOperations(
             }
 
             let res = parseOperations(expression.object, values);
-
             if (
                 typeof res === "string" &&
                 (res.charAt(0) === "{" || res.charAt(0) === "[")
@@ -222,14 +239,11 @@ function parseOperations(
                                       (values.get
                                           ? values.get(key, true)
                                           : values[key]);
-
                                   if (typeof result === "function") {
                                       result.parentFn = res;
                                   }
-
                                   return result;
                               }
-
                               return values.get
                                   ? values.get(key, true)
                                   : values[key];
@@ -262,7 +276,6 @@ function parseOperations(
                     );
                 },
             });
-
             return typeof fn === "function"
                 ? fn.apply(
                       fn.parentFn || fn,
@@ -279,10 +292,8 @@ function parseOperations(
                         const resArrow = ags.reduce((resParam, val, ind) => {
                             // @ts-ignore
                             resParam[expression.params[ind]?.name] = val;
-
                             return resParam;
                         }, {});
-
                         if (Object.keys(resArrow).length) {
                             return (
                                 resArrow[key] ||
@@ -291,10 +302,48 @@ function parseOperations(
                                     : values[key])
                             );
                         }
-
                         return values.get ? values.get(key, true) : values[key];
                     },
                 });
+        case "BlockStatement":
+            const paramsBlock = {} as Record<string, any>;
+            let result = "";
+            const paramGetBlock = {
+                get: (key: string) => {
+                    if (
+                        Object.prototype.hasOwnProperty.call(paramsBlock, key)
+                    ) {
+                        return paramsBlock[key];
+                    }
+
+                    return values.get ? values.get(key, true) : values[key];
+                },
+            };
+
+            expression.body.forEach((ext) => {
+                switch (ext.type) {
+                    case "VariableDeclaration":
+                        ext.declarations.forEach((extVar) => {
+                            paramsBlock[
+                                parseOperations(extVar.id, paramGetBlock) ||
+                                    (extVar.id as any).name
+                            ] = extVar.init
+                                ? parseOperations(extVar.init, paramGetBlock)
+                                : undefined;
+                        });
+                        break;
+                    case "ReturnStatement":
+                        result = ext.argument
+                            ? parseOperations(ext.argument, paramsBlock)
+                            : "";
+                        break;
+                    default:
+                        parseOperations(ext as any, paramGetBlock);
+                        break;
+                }
+            });
+
+            return result;
         default:
             logger.error("expression not found: ", expression);
 
