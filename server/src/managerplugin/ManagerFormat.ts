@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import PostgresDB from "@essence-report/plugininf/lib/db/postgres/PostgresDB";
 import Logger from "@essence-report/plugininf/lib/Logger";
-import * as JsReport from "jsreport-core";
+import * as JsReport from "@jsreport/jsreport-core";
 import { FORMAT_PLUGIN_DIR } from "../constant";
 
 export class ManagerFormat {

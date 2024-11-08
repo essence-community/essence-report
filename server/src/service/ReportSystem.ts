@@ -6,9 +6,9 @@ import * as path from "path";
 import * as fs from "fs";
 import { ReadStreamToArray } from "@essence-report/plugininf/lib/stream/Util";
 import PostgresDB from "@essence-report/plugininf/lib/db/postgres/PostgresDB";
-import * as JsReport from "jsreport-core";
+import * as JsReport from "@jsreport/jsreport-core";
 // @ts-ignore
-import * as JsReportHandlerBars from "jsreport-handlebars";
+import * as JsReportHandlerBars from "@jsreport/jsreport-handlebars";
 import Logger from "@essence-report/plugininf/lib/Logger";
 import { IStorage } from "@essence-report/plugininf/lib/interfaces/IStorage";
 import { defaultsDeep } from "lodash";
@@ -96,7 +96,7 @@ export class ReportSystem {
         // @ts-ignore
         this.jsReport.use(JsReportHandlerBars());
         // @ts-ignore
-        this.jsReport.use(ReportAssets());
+        // this.jsReport.use(ReportAssets());
         switch (this.params.TYPE_STORAGE) {
             case "riak":
             case "aws":
