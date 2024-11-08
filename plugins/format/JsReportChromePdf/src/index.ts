@@ -1,7 +1,7 @@
 import PostgresDB from "@essence-report/plugininf/lib/db/postgres/PostgresDB";
-import {Reporter} from "jsreport-core";
+import {Reporter} from "@jsreport/jsreport-core";
 // @ts-ignore
-import * as JsReportChromePdf from "jsreport-chrome-pdf";
+import * as JsReportChromePdf from "@jsreport/jsreport-chrome-pdf";
 import {ReadStreamToArray} from "@essence-report/plugininf/lib/stream/Util";
 
 const defaultParam = {timeout: 99999999, strategy: "chrome-pool", numberOfWorkers: 4};

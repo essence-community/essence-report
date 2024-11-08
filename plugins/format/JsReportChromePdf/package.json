@@ -1,18 +1,18 @@
 {
-  "name": "@essence-report-format/JsReportChromePdf",
-  "version": "1.0.0",
-  "description": "Format Report",
-  "main": "index.js",
-  "author": "Ivan Artemov (honyrik@gmail.com)",
-  "license": "MIT",
-  "private": true,
-  "dependencies": {
-    "@essence-report/plugininf": "^1.0.0",
-    "jsreport-chrome-pdf": "^1.10.0",
-    "jsreport-core": "^2.10.1",
-    "puppeteer": "^12.0.1"
-  },
-  "devDependencies": {
-    "@types/jsreport-core": "^2.0.0"
-  }
+    "name": "@essence-report-format/JsReportChromePdf",
+    "version": "1.0.0",
+    "description": "Format Report",
+    "main": "index.js",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "MIT",
+    "private": true,
+    "dependencies": {
+        "@essence-report/plugininf": "^1.0.0",
+        "@jsreport/jsreport-chrome-pdf": "^4.1.0",
+        "@jsreport/jsreport-core": "^4.5.0",
+        "puppeteer": "^12.0.1"
+    },
+    "devDependencies": {
+        "@types/jsreport-core": "^2.0.0"
+    }
 }

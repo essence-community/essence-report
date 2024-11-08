@@ -1,7 +1,7 @@
 import PostgresDB from "@essence-report/plugininf/lib/db/postgres/PostgresDB";
-import {Reporter} from "jsreport-core";
+import {Reporter} from "@jsreport/jsreport-core";
 // @ts-ignore
-import * as JsReportHtmlToText from "jsreport-html-to-text";
+import * as JsReportHtmlToText from "@jsreport/jsreport-html-to-text";
 import {ReadStreamToArray} from "@essence-report/plugininf/lib/stream/Util";
 
 const defaultParam = {};
