@@ -129,10 +129,13 @@ export class ReportSystem {
                     {
                         ckQueue,
                     },
+                    null,
+                    {
+                        autoCommit: true
+                    }
                 )
                 .then((res) => ReadStreamToArray(res.stream));
 
-            await conn.commit();
             if (isEmpty(rowLock) || rowLock.success !== "true") {
                 return;
             }
@@ -177,6 +180,10 @@ export class ReportSystem {
                     {
                         ckQueue,
                     },
+                    null,
+                    {
+                        autoCommit: true
+                    }
                 )
                 .then((res) => ReadStreamToArray(res.stream))
                 .then(async ([row]) => {
@@ -279,6 +286,10 @@ export class ReportSystem {
                     {
                         ckQueue,
                     },
+                    null,
+                    {
+                        autoCommit: true
+                    }
                 )
                 .then((res) => ReadStreamToArray(res.stream))
                 .then((assets) =>
@@ -429,10 +440,12 @@ export class ReportSystem {
                                     },
                                 }),
                             },
+                            null,
+                            {
+                                autoCommit: true,
+                            },
                         )
                         .then((resPkg) => ReadStreamToArray(resPkg.stream));
-
-                    return conn.commit();
                 })
                 .catch(async (err) => {
                     this.logger.error("Error build report %s", ckQueue, err);
@@ -458,7 +471,7 @@ export class ReportSystem {
             }
         } finally {
             await conn.rollbackAndRelease();
-            deleteFolderRecursive(queuePath);
+            // deleteFolderRecursive(queuePath);
         }
     }
     private async changeError(
@@ -482,6 +495,10 @@ export class ReportSystem {
                         },
                     }),
                 },
+                null,
+                {
+                    autoCommit: true,
+                },
             )
             .then((res) => ReadStreamToArray(res.stream));
         await conn
@@ -501,9 +518,12 @@ export class ReportSystem {
                         },
                     }),
                 },
+                null,
+                {
+                    autoCommit: true,
+                },
             )
             .then((res) => ReadStreamToArray(res.stream));
-        await conn.commit();
     }
 
     private async getQueryChildData(
