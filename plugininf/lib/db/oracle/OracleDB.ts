@@ -510,6 +510,14 @@ export default class OracleDB {
         return;
     }
 
+    public async onTx(conn?: oracledb.Connection): Promise<any> {
+        if (conn) {
+            return conn.execute("BEGIN").then(() => Promise.resolve());
+        }
+
+        return;
+    }
+
     /**
      * Вызываем запрос
      * @param conn - Коннект к бд
