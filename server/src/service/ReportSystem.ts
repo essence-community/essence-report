@@ -11,7 +11,7 @@ import * as JsReport from "@jsreport/jsreport-core";
 import * as JsReportHandlerBars from "@jsreport/jsreport-handlebars";
 import Logger from "@essence-report/plugininf/lib/Logger";
 import { IStorage } from "@essence-report/plugininf/lib/interfaces/IStorage";
-import { defaultsDeep } from "lodash";
+import { defaultsDeep, noop } from 'lodash';
 import { IReportData } from "@essence-report/plugininf/lib/interfaces/IReportData";
 import dataBase, { DataBase } from "@essence-report/plugininf/lib/db/DataBase";
 import Connection from "@essence-report/plugininf/lib/db/Connection";
@@ -115,7 +115,6 @@ export class ReportSystem {
 
     public async runReport(ckQueue: string) {
         this.logger.debug("Init connection");
-        const conn = await this.pgSql.getConnection();
         const queuePath = path.resolve(TMP_DIR, `assets_${ckQueue}`);
 
         fs.mkdirSync(queuePath, {
@@ -123,9 +122,10 @@ export class ReportSystem {
         });
         try {
             this.logger.debug("Lock queue %s", ckQueue);
-            const [rowLock] = await conn
+            const [rowLock] = await this.pgSql
                 .executeStmt(
                     "select pkg_json_essence_report.f_processing_queue(:ckQueue) as success",
+                    null,
                     {
                         ckQueue,
                     },
@@ -140,7 +140,7 @@ export class ReportSystem {
                 return;
             }
             this.logger.debug("Load queue param %s", ckQueue);
-            const reportData: IReportData = await conn
+            const reportData: IReportData = await this.pgSql
                 .executeStmt(
                     "select\n" +
                         "    tq.cct_parameter,\n" +
@@ -177,6 +177,7 @@ export class ReportSystem {
                         "    tdf.ck_id = trf.ck_d_format\n" +
                         "where\n" +
                         "    tq.ck_id = :ckQueue::uuid\n",
+                        null,
                     {
                         ckQueue,
                     },
@@ -267,7 +268,7 @@ export class ReportSystem {
 
             this.logger.debug("Queue queue %s param %j", ckQueue, reportData);
             this.logger.debug("Load asset in %s", ckQueue);
-            await conn
+            await this.pgSql
                 .executeStmt(
                     "select\n" +
                         "    tra.cv_name,\n" +
@@ -283,6 +284,7 @@ export class ReportSystem {
                         "    tra.ck_asset = ta.ck_id\n" +
                         "where\n" +
                         "    tq.ck_id = :ckQueue::uuid\n",
+                        null,
                     {
                         ckQueue,
                     },
@@ -317,7 +319,8 @@ export class ReportSystem {
                             }
                         }),
                     ),
-                );
+                )
+                .then(noop);;
             this.logger.debug("Load data query in %s", ckQueue);
             let queries;
 
@@ -371,7 +374,7 @@ export class ReportSystem {
                     err.message,
                     err,
                 );
-                await this.changeError(conn, ckQueue, "db_error", err);
+                await this.changeError(ckQueue, "db_error", err);
 
                 return;
             }
@@ -425,10 +428,11 @@ export class ReportSystem {
                             originalFilename: reportData.fileName,
                         },
                     );
-                    await conn
+                    await this.pgSql
                         .executeStmt(
                             // eslint-disable-next-line max-len
                             "select pkg_json_essence_report.f_modify_queue('-11'::varchar, 'USPO_SERVER'::varchar, :json::jsonb, 1::smallint) as result",
+                            null,
                             {
                                 json: JSON.stringify({
                                     service: {
@@ -447,15 +451,10 @@ export class ReportSystem {
                         )
                         .then((resPkg) => ReadStreamToArray(resPkg.stream));
                 })
+                .then(noop)
                 .catch(async (err) => {
                     this.logger.error("Error build report %s", ckQueue, err);
-                    try {
-                        await conn.rollback();
-                    } catch (e) {
-                        this.logger.error("Error rollback %s", ckQueue, e);
-                    }
-
-                    return this.changeError(conn, ckQueue, "system_error", err);
+                    return this.changeError(ckQueue, "system_error", err);
                 });
         } catch (err) {
             if (err.message && err.message.indexOf("Not found queue") > -1) {
@@ -467,23 +466,22 @@ export class ReportSystem {
                     err.message,
                     err,
                 );
-                await this.changeError(conn, ckQueue, "system_error", err);
+                await this.changeError(ckQueue, "system_error", err);
             }
         } finally {
-            await conn.rollbackAndRelease();
             // deleteFolderRecursive(queuePath);
         }
     }
     private async changeError(
-        conn: Connection,
         ckQueue: string,
         ckDError: string,
         err: Error,
     ) {
-        await conn
+        await this.pgSql
             .executeStmt(
                 // eslint-disable-next-line max-len
                 "select pkg_json_essence_report.f_modify_queue('-11'::varchar, 'USPO_SERVER'::varchar, :json::jsonb, 1::smallint) as result",
+                null,
                 {
                     json: JSON.stringify({
                         service: {
@@ -501,10 +499,11 @@ export class ReportSystem {
                 },
             )
             .then((res) => ReadStreamToArray(res.stream));
-        await conn
+        await this.pgSql
             .executeStmt(
                 // eslint-disable-next-line max-len
                 "select pkg_json_essence_report.f_modify_queue_log('-11'::varchar, 'USPO_SERVER'::varchar, :json::jsonb) as result",
+                null,
                 {
                     json: JSON.stringify({
                         service: {

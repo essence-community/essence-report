@@ -9,6 +9,7 @@ class Connection extends EventEmitter {
     private DataSource: any;
     private isReleased = false;
     private isExecute = false;
+    private isTx = false;
     constructor(dataSource: any, name: nameType, connection?: any) {
         super();
         this.name = name;
@@ -46,6 +47,16 @@ class Connection extends EventEmitter {
 
         return result;
     }
+
+    public async tx(): Promise<void> {
+        if (this.isTx) {
+            return;
+        }
+        return this.DataSource.onTx(this.connection).then(() => {
+            this.isTx = true;
+        });
+    }
+
     public async release(): Promise<void> {
         if (this.isReleased) {
             return;
@@ -62,6 +73,10 @@ class Connection extends EventEmitter {
         }
         try {
             this.isExecute = true;
+            if (this.isTx) {
+                await this.rollback();
+                this.isTx = false;
+            }
             await this.DataSource.onRelease(this.connection);
         } finally {
             this.isExecute = false;
@@ -87,6 +102,10 @@ class Connection extends EventEmitter {
         }
         try {
             this.isExecute = true;
+            if (this.isTx) {
+                await this.rollback();
+                this.isTx = false;
+            }
             await this.DataSource.onClose(this.connection);
         } finally {
             this.isExecute = false;
@@ -115,6 +134,7 @@ class Connection extends EventEmitter {
             await this.DataSource.onCommit(this.connection);
         } finally {
             this.isExecute = false;
+            this.isTx = false;
             this.emit("finish");
         }
 
@@ -139,6 +159,7 @@ class Connection extends EventEmitter {
             await this.DataSource.onRollBack(this.connection);
         } finally {
             this.isExecute = false;
+            this.isTx = false;
             this.emit("finish");
         }
 

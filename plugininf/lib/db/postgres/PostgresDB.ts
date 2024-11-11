@@ -390,6 +390,14 @@ export default class PostgresDB {
         return Promise.resolve();
     }
 
+    public async onTx(conn?: pg.ClientBase): Promise<void> {
+        if (conn) {
+            return conn.query("BEGIN").then(() => Promise.resolve());
+        }
+
+        return Promise.resolve();
+    }
+
     /**
      * Вызываем запрос
      * @param conn - Коннект к бд
@@ -572,15 +580,8 @@ export default class PostgresDB {
                 return result;
             }
 
-            let res;
+            let res = await conn.query(query.text, query.values);
 
-            if (options.autoCommit) {
-                res = await conn.query(query.text, query.values);
-            } else {
-                res = await conn
-                    .query("BEGIN")
-                    .then(() => conn.query(query.text, query.values));
-            }
             if (estimateTimerId !== null) {
                 clearTimeout(estimateTimerId);
             }

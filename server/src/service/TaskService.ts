@@ -218,6 +218,7 @@ export class TaskService {
         const conn = await this.pgSql.getConnection();
 
         try {
+            await conn.tx();
             const schedulerData = await conn
                 .executeStmt(
                     "select\n" +
@@ -272,6 +273,7 @@ export class TaskService {
         const conn = await this.pgSql.getConnection();
 
         try {
+            await conn.tx();
             const needDeleteData = await conn
                 .executeStmt(
                     "select\n" +
