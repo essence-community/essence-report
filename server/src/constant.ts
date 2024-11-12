@@ -15,3 +15,6 @@ export const CLUSTER_NUM: number = process.env.ESSENCE_REPORT_CLUSTER_NUM
     ? parseInt(process.env.ESSENCE_REPORT_CLUSTER_NUM, 10)
     : os.cpus().length;
 export const TMP_DIR = process.env.ESSENCE_REPORT_TMP_DIR || os.tmpdir();
+export const QUEUE_LIMIT_NUM: number = process.env.ESSENCE_QUEUE_LIMIT_NUM
+    ? parseInt(process.env.ESSENCE_QUEUE_LIMIT_NUM, 10)
+    : 15;
