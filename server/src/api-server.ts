@@ -40,7 +40,9 @@ export class ApiServer {
             await managerAuth.init();
             this.server = this.app.listen(this.PORT, async (...arg) => {
                 if (DISABLED_TASK_SERVICE !== "true") {
-                    await taskService.init();
+                    if (!process.env.NODE_HTTP_ID || process.env.NODE_HTTP_ID === "1") {
+                        await taskService.init();
+                    }
                 }
                 if (arg && arg.length) {
                     return reject(...arg);
