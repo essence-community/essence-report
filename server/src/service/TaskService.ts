@@ -12,6 +12,8 @@ import { throttle, isEmpty } from "@essence-report/plugininf/lib/utils/Base";
 import { noop } from "lodash";
 import * as CronParser from "cron-parser";
 import reportSystem from "../service/ReportSystem";
+import { QUEUE_LIMIT_NUM } from "../constant";
+import * as url from 'url';
 
 export class TaskService {
     private pgSql: PostgresDB;
@@ -65,7 +67,7 @@ export class TaskService {
                     "join t_d_queue tdq on\n" +
                     "    tdq.ck_id = tq.ck_d_queue\n" +
                     "where\n" +
-                    "    tq.ck_d_status = 'add'\n",
+                    `    tq.ck_d_status = 'add' limit ${QUEUE_LIMIT_NUM}\n`,
             )
             .then((res) => ReadStreamToArray(res.stream))
             .then((arr) =>
@@ -81,11 +83,7 @@ export class TaskService {
 
         queueParams.forEach((queue) => {
             if (!queue.url || queue.url.length === 0) {
-                reportSystem.runReport(queue.ck_id).then(noop, (err) => {
-                    this.logger.error("Error run report %s", err.message, err);
-                });
-
-                return;
+                queue.url = [`http://localhost:${process.env.ESSENCE_REPORT_PORT || 8020}/runner`];
             }
             const urlRunner = URL.parse(queue.url[0], true);
 
