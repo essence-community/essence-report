@@ -14,9 +14,7 @@ import { IStorage } from "@essence-report/plugininf/lib/interfaces/IStorage";
 import { defaultsDeep, noop } from 'lodash';
 import { IReportData } from "@essence-report/plugininf/lib/interfaces/IReportData";
 import dataBase, { DataBase } from "@essence-report/plugininf/lib/db/DataBase";
-import Connection from "@essence-report/plugininf/lib/db/Connection";
 import {
-    deleteFolderRecursive,
     isEmpty,
 } from "@essence-report/plugininf/lib/utils/Base";
 import * as AdmZip from "adm-zip";
@@ -26,11 +24,11 @@ import { DirStorage } from "../storage/DirStorage";
 import { S3Storage } from "../storage/S3Storage";
 import { ManagerFormat } from "../managerplugin/ManagerFormat";
 import { ManagerSource } from "../managerplugin/ManagerSource";
-import { ReportAssets } from "../jsreportsmodule/ReportAssets";
 import { defaultHelper, engineHelper } from "../jsreportsmodule/Helper";
 
 export class ReportSystem {
     private pgSql: PostgresDB;
+    private jsReport: JsReport.Reporter;
     private paramFormat: Record<string, any>;
     private managerSource: ManagerSource;
     private managerFormat: ManagerFormat;
@@ -54,41 +52,7 @@ export class ReportSystem {
                     return res;
                 }, {}),
             );
-        this.paramFormat = await this.pgSql
-            .executeStmt("select cv_name_lib, cct_parameter from t_d_format")
-            .then((res) => ReadStreamToArray(res.stream))
-            .then((arr) =>
-                arr.reduce((res, obj) => {
-                    res[obj.cv_name_lib] =
-                        typeof obj.cct_parameter === "string"
-                            ? JSON.parse(obj.cct_parameter)
-                            : obj.cct_parameter;
-
-                    return res;
-                }, {}),
-            );
-
-        // @ts-ignore
-        // this.jsReport.use(ReportAssets());
-        switch (this.params.TYPE_STORAGE) {
-            case "riak":
-            case "aws":
-                this.storage = new S3Storage(this.params, this.logger);
-                break;
-            case "local":
-                this.storage = new LocalStorage(this.params, this.logger);
-                break;
-            default:
-                this.storage = new DirStorage(this.params, this.logger);
-                break;
-        }
-        await this.managerSource.init();
-
-    }
-
-    public async runReport(ckQueue: string) {
-        this.logger.debug("Run runReport");
-        const jsReport = JsReport(
+        this.jsReport = JsReport(
             defaultsDeep(JSON.parse(this.params.JSREPORT_SETTING || "{}"), {
                 reportTimeout: 99999999,
                 timeout: 99999999,
@@ -112,9 +76,43 @@ export class ReportSystem {
                 },
             }),
         );
-        await this.managerFormat.init(jsReport, this.paramFormat);
-        jsReport.use(JsReportHandlerBars());
-        await jsReport.init();
+        const paramFormat = await this.pgSql
+            .executeStmt("select cv_name_lib, cct_parameter from t_d_format")
+            .then((res) => ReadStreamToArray(res.stream))
+            .then((arr) =>
+                arr.reduce((res, obj) => {
+                    res[obj.cv_name_lib] =
+                        typeof obj.cct_parameter === "string"
+                            ? JSON.parse(obj.cct_parameter)
+                            : obj.cct_parameter;
+
+                    return res;
+                }, {}),
+            );
+
+        await this.managerFormat.init(this.jsReport, paramFormat);
+        // @ts-ignore
+        this.jsReport.use(JsReportHandlerBars());
+        // @ts-ignore
+        // this.jsReport.use(ReportAssets());
+        switch (this.params.TYPE_STORAGE) {
+            case "riak":
+            case "aws":
+                this.storage = new S3Storage(this.params, this.logger);
+                break;
+            case "local":
+                this.storage = new LocalStorage(this.params, this.logger);
+                break;
+            default:
+                this.storage = new DirStorage(this.params, this.logger);
+                break;
+        }
+        await this.managerSource.init();
+        await this.jsReport.init();
+    }
+
+    public async runReport(ckQueue: string) {
+        this.logger.debug("Init connection");
         const queuePath = path.resolve(TMP_DIR, `assets_${ckQueue}`);
 
         fs.mkdirSync(queuePath, {
@@ -411,7 +409,7 @@ export class ReportSystem {
 
             configRender.data.in_param = reportData.reportParameter;
             this.logger.debug("Build report %s", ckQueue);
-            await jsReport
+            await this.jsReport
                 .render(configRender)
                 .then(async (res: any) => {
                     this.logger.debug(
